@@ -1,0 +1,100 @@
+name: PR checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  pr-size:
+    name: Check PR size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const MAX_LINES = 400;
+            const { data: diff } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: context.payload.pull_request.base.sha,
+              head: context.payload.pull_request.head.sha,
+            });
+            const totalLines = diff.files.reduce((sum, f) => sum + (f.additions + f.deletions), 0);
+            if (totalLines > MAX_LINES) {
+              core.setFailed(`PR is ${totalLines} lines (max ${MAX_LINES}). Please split into smaller PRs.`);
+            }
+
+  pr-title:
+    name: Check PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const pattern = /^(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\(.+\))?: .+/;
+            if (!pattern.test(title)) {
+              core.setFailed('PR title must follow conventional commits: type(scope): description');
+            }
+
+  pr-description:
+    name: Check PR description
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const sections = ['## What', '## Why', '## Testing'];
+            const missing = sections.filter(s => !body.includes(s));
+            if (missing.length > 0) {
+              core.setFailed(`PR missing sections: ${missing.join(', ')}`);
+            }
+
+  pr-labels:
+    name: Check labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            if (labels.length === 0) {
+              core.setFailed('PR must have at least one label.');
+            }
+
+  branch-name:
+    name: Check branch name
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.payload.pull_request.head.ref;
+            const pattern = /^(feat|fix|chore|docs|refactor|test|perf|ci|build|revert)\/[a-z0-9._-]+$/;
+            if (!pattern.test(branch)) {
+              core.setFailed(`Branch name must follow pattern: type/description (got: ${branch})`);
+            }
+
+  changelog:
+    name: Check changelog
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'fix/')
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: diff } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            const hasChangelog = diff.some(f => f.filename.includes('CHANGELOG'));
+            if (!hasChangelog) {
+              core.setFailed('feat/fix PRs should include a CHANGELOG entry.');
+            }

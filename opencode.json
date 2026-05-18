@@ -1,0 +1,32 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "docs/agents/GUARDRAILS.md",
+    "docs/agents/STANDARDS.md"
+  ],
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "bash scripts/lint.sh": "allow",
+      "bash scripts/type-check.sh": "allow",
+      "bash scripts/test.sh*": "allow",
+      "bash scripts/coverage.sh": "allow",
+      "bash scripts/build.sh": "allow",
+      "bash scripts/guardrails-check.sh": "allow",
+      "bash scripts/run.sh*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git status": "allow",
+      "ls *": "allow",
+      "grep *": "allow",
+      "cat *": "allow",
+      "npx *": "allow",
+      "npm *": "allow",
+      "pip *": "allow",
+      "cargo *": "allow",
+      "go *": "allow",
+      "flutter *": "allow"
+    }
+  }
+}

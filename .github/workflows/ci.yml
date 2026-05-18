@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+
+jobs:
+  detect-layers:
+    runs-on: ubuntu-latest
+    outputs:
+      layers: ${{ steps.set-layers.outputs.layers }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-layers
+        run: |
+          if [ -d packages ] && [ "$(ls packages)" ]; then
+            LAYERS=$(ls packages | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            echo "layers=$LAYERS" >> $GITHUB_OUTPUT
+          else
+            echo 'layers=["."]' >> $GITHUB_OUTPUT
+          fi
+
+  lint:
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/lint.sh
+
+  type-check:
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/type-check.sh
+
+  test-unit:
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/test.sh --unit
+
+  test-integration:
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/test.sh --integration
+
+  test-e2e:
+    if: github.ref == 'refs/heads/main'
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/test.sh --e2e
+
+  coverage:
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/coverage.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.layer }}
+          path: coverage/
+
+  build:
+    needs: [detect-layers]
+    strategy:
+      matrix:
+        layer: ${{ fromJson(needs.detect-layers.outputs.layers) }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.layer == '.' && '.' || format('packages/{0}', matrix.layer) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/setup-ci.sh
+      - run: bash scripts/build.sh
+
+  required-checks:
+    if: always()
+    needs:
+      - lint
+      - type-check
+      - test-unit
+      - test-integration
+      - coverage
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@v1
+        with:
+          jobs: ${{ toJSON(needs) }}

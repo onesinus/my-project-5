@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+__pnp__
+.pnp.loader.mjs
+.venv/
+venv/
+__pypackages__/
+vendor/
+.gradle/
+build/
+
+# Build outputs
+dist/
+build/
+lib/
+out/
+*.tsbuildinfo
+*.egg-info/
+*.egg
+bin/
+*.exe
+*.exe~
+*.test
+*.out
+target/
+**/*.rs.bk
+*.class
+*.jar
+*.war
+
+# Bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+.classpath
+.project
+*.iws
+*.ipr
+*.iml
+.settings/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test
+coverage/
+.nyc_output/
+htmlcov/
+.pytest_cache/
+cover.out
+junit.xml
+
+# Secrets
+.secrets.baseline
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary
+tmp/
+temp/
+*.tmp

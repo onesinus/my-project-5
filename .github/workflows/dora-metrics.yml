@@ -1,0 +1,73 @@
+name: DORA metrics report
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    name: Generate weekly report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate DORA metrics
+        id: metrics
+        run: |
+          DAYS=7
+          SINCE=$(date -d "$DAYS days ago" +%Y-%m-%d)
+
+          DEPLOYS=$(git log --oneline --since="$SINCE" --first-parent main 2>/dev/null | wc -l)
+
+          REVERTS=$(git log --oneline --since="$SINCE" --grep="revert" --first-parent main 2>/dev/null | wc -l)
+          if [ "$DEPLOYS" -gt 0 ]; then
+            FAIL_RATE=$(echo "scale=1; $REVERTS * 100 / $DEPLOYS" | bc)
+          else
+            FAIL_RATE="N/A"
+          fi
+
+          echo "deploys=$DEPLOYS" >> $GITHUB_OUTPUT
+          echo "fail_rate=$FAIL_RATE" >> $GITHUB_OUTPUT
+
+      - name: Create metrics issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploys = '${{ steps.metrics.outputs.deploys }}';
+            const failRate = '${{ steps.metrics.outputs.fail_rate }}';
+            const now = new Date().toISOString().split('T')[0];
+
+            const body = `## DORA Weekly Report — ${now}
+
+            | Metric | Value |
+            |---|---|
+            | Deployment Frequency (7 days) | ${deploys} deploys |
+            | Change Failure Rate | ${failRate}% |
+
+            _Lead Time for Changes and MTTR require PR and incident data tracked externally._
+
+            ### Trend
+
+            Compare with [previous week's report]().
+
+            ### Actions
+
+            - Review this week's metrics at squad retro
+            - ${deploys < 7 ? 'Consider: what's blocking more frequent deployments?' : ''}
+            - ${parseFloat(failRate) > 5 ? 'Failure rate above 5% target. Review recent reverts for patterns.' : ''}
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `DORA metrics report — ${now}`,
+              body: body,
+              labels: ['metrics'],
+            });

@@ -1,0 +1,16 @@
+# Each line is a file pattern followed by one or more owners.
+# Order matters: the last matching pattern takes precedence.
+
+# Default owners for everything
+* @team-leads
+
+# Docs ownership
+/docs/ @tech-writers
+
+# CI/CD ownership
+/.github/workflows/ @platform-team
+
+# Security-sensitive files
+**/secrets* @security-team
+**/*.pem @security-team
+**/*.key @security-team

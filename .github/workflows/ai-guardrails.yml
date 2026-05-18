@@ -1,0 +1,106 @@
+name: AI Guardrails
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  guardrails:
+    name: Validate AI-generated code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run guardrails check
+        run: bash scripts/guardrails-check.sh --ci
+
+  code-review:
+    name: Automated code review hints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for AI-assisted label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            if (labels.includes('ai-assisted')) {
+              const body = context.payload.pull_request.body || '';
+              const aiReviewHints = [
+                "## AI-assisted PR — review guidance",
+                "",
+                "This PR was flagged as AI-assisted. Please pay extra attention to:",
+                "",
+                "1. **Test coverage** — Are all new code paths tested?",
+                "2. **Edge cases** — Error handling, empty states, boundary values",
+                "3. **Security** — Input validation, injection risks, auth checks",
+                "4. **Consistency** — Does the code follow existing project patterns?",
+                "5. **Hallucinations** — Are imported functions, types, or APIs real?",
+              ].join("\n");
+              if (!body.includes('AI-assisted')) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: aiReviewHints,
+                });
+              }
+            }
+
+  check-test-requirement:
+    name: Check test requirement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check new source files have tests
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: diff } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            const srcPattern = /^src\/(.+)\.(ts|tsx|js|jsx|py|go|rs|java)$/;
+            const testPattern = /^tests\/(unit|integration)\//;
+            const missing = [];
+
+            for (const file of diff) {
+              const match = file.filename.match(srcPattern);
+              if (match && file.status !== 'deleted') {
+                const testBase = match[1];
+                const ext = match[2];
+                const testVariants = [
+                  `tests/unit/${testBase}.test.${ext}`,
+                  `tests/unit/${testBase}.spec.${ext}`,
+                  `tests/integration/${testBase}.test.${ext}`,
+                  `tests/integration/${testBase}.spec.${ext}`,
+                  `tests/unit/${testBase}_test.go`,
+                  `tests/integration/${testBase}_test.go`,
+                  `tests/unit/${testBase}_test.py`,
+                  `tests/integration/${testBase}_test.py`,
+                ];
+                const hasTest = diff.some(f => testVariants.includes(f.filename));
+                if (!hasTest) {
+                  missing.push(file.filename);
+                }
+              }
+            }
+
+            if (missing.length > 0) {
+              const msg = `The following source file(s) appear to be missing corresponding tests:\n${missing.map(f => `- ${f}`).join('\n')}\n\nPlease add tests before merging.`;
+              core.setFailed(msg);
+            }
