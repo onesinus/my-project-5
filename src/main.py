@@ -16,7 +16,7 @@ app = FastAPI(title="my-project-5", version="0.1.0")
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok hehe", "timestamp": datetime.now(UTC).isoformat()}
+    return {"status": "ok", "timestamp": datetime.now(UTC).isoformat()}
 
 
 @app.get("/api/hello")
