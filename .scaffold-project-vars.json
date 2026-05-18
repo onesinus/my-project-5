@@ -1,0 +1,13 @@
+{
+  "project_slug": "my-project-5",
+  "project_name": "My Project",
+  "project_description": "",
+  "version": "0.1.0",
+  "author": "",
+  "project_layout": "Single layer (flat)",
+  "web_framework": "None",
+  "backend_stack": "Python + FastAPI",
+  "mobile_framework": "None",
+  "ai_assistant": "opencode",
+  "guardrail_level": "Full automation (hooks + CI + scripts)"
+}

@@ -1,0 +1,227 @@
+# Scaffold manifest — lists all standard files that the update mechanism tracks.
+# Each entry:
+#   path: file path relative to project root
+#   rendered: whether file contains {{cookiecutter.*}} placeholders
+#   layer: which layer owns this file (always | web:* | api:* | mobile:*)
+#   description: human-readable purpose
+
+# --- Core config ---
+- path: .pre-commit-config.yaml
+  rendered: false
+  layer: always
+  description: Pre-commit hook configuration
+
+- path: .editorconfig
+  rendered: false
+  layer: always
+  description: Editor config for consistent formatting
+
+- path: .gitignore
+  rendered: false
+  layer: always
+  description: Git ignore rules
+
+- path: .env.example
+  rendered: false
+  layer: always
+  description: Environment variable template
+
+# --- CI/CD workflows ---
+- path: .github/workflows/ci.yml
+  rendered: false
+  layer: always
+  description: CI pipeline (lint, test, build)
+
+- path: .github/workflows/pr-checks.yml
+  rendered: false
+  layer: always
+  description: PR validation checks
+
+- path: .github/workflows/ai-guardrails.yml
+  rendered: false
+  layer: always
+  description: AI guardrail validation
+
+- path: .github/workflows/auto-assign.yml
+  rendered: false
+  layer: always
+  description: Auto-assign PR reviewers
+
+- path: .github/workflows/dora-metrics.yml
+  rendered: false
+  layer: always
+  description: DORA metrics tracking
+
+- path: .github/workflows/review-reminder.yml
+  rendered: false
+  layer: always
+  description: Review reminder bot
+
+# --- GitHub templates ---
+- path: .github/CODEOWNERS
+  rendered: false
+  layer: always
+  description: Code ownership rules
+
+- path: .github/PULL_REQUEST_TEMPLATE.md
+  rendered: false
+  layer: always
+  description: PR description template
+
+- path: .github/ISSUE_TEMPLATE/bug_report.md
+  rendered: false
+  layer: always
+  description: Bug report issue template
+
+- path: .github/ISSUE_TEMPLATE/feature_request.md
+  rendered: false
+  layer: always
+  description: Feature request issue template
+
+- path: .github/ISSUE_TEMPLATE/spike.md
+  rendered: false
+  layer: always
+  description: Spike/research issue template
+
+- path: .github/ISSUE_TEMPLATE/tech_debt.md
+  rendered: false
+  layer: always
+  description: Tech debt issue template
+
+# --- Cross-cutting scripts ---
+- path: scripts/guardrails-check.sh
+  rendered: false
+  layer: always
+  description: Guardrails validation script
+
+- path: scripts/dora-metrics.sh
+  rendered: false
+  layer: always
+  description: DORA metrics collection script
+
+- path: scripts/validate-pr.sh
+  rendered: false
+  layer: always
+  description: PR validation script
+
+# --- Documentation templates ---
+- path: docs/adr/README.md
+  rendered: false
+  layer: always
+  description: ADR directory readme
+
+- path: docs/adr/0001-flow-first-sdlc-framework.md
+  rendered: false
+  layer: always
+  description: First ADR — framework decision record
+
+- path: docs/agents/README.md
+  rendered: false
+  layer: always
+  description: AI agent docs index
+
+- path: docs/agents/GUARDRAILS.md
+  rendered: false
+  layer: always
+  description: AI agent safety guardrails
+
+- path: docs/agents/STANDARDS.md
+  rendered: false
+  layer: always
+  description: AI agent usage standards
+
+- path: docs/agents/prompts/api-docs.md
+  rendered: false
+  layer: always
+  description: Prompt template — API docs
+
+- path: docs/agents/prompts/code-review.md
+  rendered: false
+  layer: always
+  description: Prompt template — code review
+
+- path: docs/agents/prompts/debug-issue.md
+  rendered: false
+  layer: always
+  description: Prompt template — debug issue
+
+- path: docs/agents/prompts/generate-migration.md
+  rendered: false
+  layer: always
+  description: Prompt template — DB migration
+
+- path: docs/agents/prompts/refactor-code.md
+  rendered: false
+  layer: always
+  description: Prompt template — refactor
+
+- path: docs/agents/prompts/tdd-feature.md
+  rendered: false
+  layer: always
+  description: Prompt template — TDD feature
+
+- path: docs/agents/prompts/write-tests.md
+  rendered: false
+  layer: always
+  description: Prompt template — write tests
+
+- path: docs/agents/skills/incident-response.md
+  rendered: false
+  layer: always
+  description: AI skill — incident response
+
+- path: docs/agents/skills/pr-preparation.md
+  rendered: false
+  layer: always
+  description: AI skill — PR prep
+
+- path: docs/agents/skills/safe-refactoring.md
+  rendered: false
+  layer: always
+  description: AI skill — safe refactoring
+
+- path: docs/agents/skills/tdd-workflow.md
+  rendered: false
+  layer: always
+  description: AI skill — TDD workflow
+
+- path: docs/metrics/README.md
+  rendered: false
+  layer: always
+  description: Metrics docs index
+
+- path: docs/metrics/retro-template.md
+  rendered: false
+  layer: always
+  description: Retrospective template
+
+- path: docs/runbooks/README.md
+  rendered: false
+  layer: always
+  description: Runbooks index
+
+- path: docs/runbooks/incident-response.md
+  rendered: false
+  layer: always
+  description: Incident response runbook
+
+- path: docs/specs/README.md
+  rendered: false
+  layer: always
+  description: Specs directory readme
+
+- path: docs/testing/README.md
+  rendered: false
+  layer: always
+  description: Testing strategy docs
+
+# --- Rendered files (contain placeholders) ---
+- path: README.md
+  rendered: true
+  layer: always
+  description: Project README
+
+- path: CONTRIBUTING.md
+  rendered: true
+  layer: always
+  description: Contributing guidelines
