@@ -24,6 +24,7 @@ An ADR documents a significant decision that is:
 | # | Title | Status |
 |---|---|---|
 | 0001 | Adopt Flow-First SDLC framework | accepted |
+| 0002 | Scaffold update mechanism for generated projects | accepted |
 
 ## Template
 
